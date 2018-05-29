@@ -4,7 +4,7 @@
  Author      : Angelo Settembre
  Version     :
  Copyright   : Your copyright notice
- Description : Hello MPI World in C 
+ Description : Matrix Multiplication in MPI with Collective communication routines
  ============================================================================
  */
 #include <stdio.h>
