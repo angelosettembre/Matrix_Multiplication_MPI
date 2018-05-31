@@ -19,6 +19,7 @@
 void allocateMatrix(int **matrix, int size);
 void createMatrix(int **matrix, int size);
 void printMatrix(int **matrix, int size);
+void createArray(int *array, int **matrix, int position);
 
 int main(int argc, char* argv[]){
 	int  my_rank; /* rank of process */
@@ -28,6 +29,7 @@ int main(int argc, char* argv[]){
 	int tag=0;    /* tag for messages */
 	char message[100];        /* storage for message */
 	int **matrixA, **matrixB, **matrixC;					/*MATRICI*/
+	int *arraySend;
 	int i,j,k;
 	int sum = 0;
 	MPI_Status status ;   /* return status for receive */
@@ -79,6 +81,14 @@ int main(int argc, char* argv[]){
 		printf("Second Matrix \n");
 		printMatrix(matrixB, SIZE);
 
+		arraySend = malloc(SIZE * sizeof(int));					//Allocazione array
+		createArray(arraySend, matrixA, 0);						//CREAZIONE ARRAY
+
+		for(i=0; i<SIZE; i++){
+			printf("%d", arraySend[i]);
+		}
+
+		/*
 		if(p==1){												//SE C'È UN UNICO PROCESSORE
 			for(i=0; i<SIZE; i++){
 				for(j=0; j<SIZE; j++){
@@ -92,7 +102,7 @@ int main(int argc, char* argv[]){
 			printf("Multiplication of the 2 matrix is:\n");
 			printMatrix(matrixC, SIZE);
 		}
-
+		*/
 		for (source = 1; source < p; source++) {
 			MPI_Recv(message, 100, MPI_CHAR, source, tag,
 					MPI_COMM_WORLD, &status);
@@ -122,6 +132,7 @@ void createMatrix(int **matrix, int size){
 		}
 	}
 }
+
 /*FUNZIONE PER LA STAMPA DELLE MATRICI*/
 void printMatrix(int **matrix, int size){
 
@@ -131,5 +142,13 @@ void printMatrix(int **matrix, int size){
 			printf("%d\t",matrix[i][j]);
 		}
 		printf("\n");
+	}
+}
+
+/*FUNZIONE PER LA CREAZIONE DEL PRIMO ARRY*/
+void createArray(int *array, int **matrix, int position){
+	int i;
+	for(i=0; i<SIZE; i++){
+		array[i] = matrix[0][i];
 	}
 }
