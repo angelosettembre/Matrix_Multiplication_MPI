@@ -13,7 +13,7 @@
 #include <string.h>
 #include "mpi.h"
 
-#define SIZE 7									/*Dimensione righe e colonne di ogni matrice*/
+#define SIZE 4									/*Dimensione righe e colonne di ogni matrice*/
 
 /*PROTOTIPI FUNZIONI*/
 void allocateMatrix(int **matrix, int size);
@@ -54,29 +54,10 @@ int main(int argc, char* argv[]){
 	allocateMatrix(matrixC, SIZE);
 	/*		*/
 
-	/*COSTRUZIONE MATRICI*/
-	createMatrix(matrixA, SIZE);
-	createMatrix(matrixB, SIZE);
+	srand(time(NULL));										//SEME DELLA FUNZIONE rand()
 
-	printf("First Matrix \n");
-	printMatrix(matrixA, SIZE);
+	//ACCEDERE SIZE*i+j
 
-	printf("Second Matrix \n");
-	printMatrix(matrixB, SIZE);
-
-	if(p==1){												//SE C'È UN UNICO PROCESSORE
-		for(i=0; i<SIZE; i++){
-			for(j=0; j<SIZE; j++){
-				for(k=0; k<SIZE; k++){
-					sum = sum + matrixA[i][k]*matrixB[k][j];
-				}
-				matrixC[i][j] = sum;
-				sum = 0;
-			}
-		}
-		printf("Multiplication of the 2 matrix is:\n");
-		printMatrix(matrixC, SIZE);
-	}
 
 	if (my_rank !=0){
 		/* create message */
@@ -86,8 +67,32 @@ int main(int argc, char* argv[]){
 		MPI_Send(message, strlen(message)+1, MPI_CHAR,
 				dest, tag, MPI_COMM_WORLD);
 	}
-	else{
+	else{																			//SE IL PROCESSORE È IL MASTER
 		printf("Matrix Multiplication MPI From process 0: Num processes: %d\n",p);
+		/*COSTRUZIONE MATRICI*/
+		createMatrix(matrixA, SIZE);
+		createMatrix(matrixB, SIZE);
+
+		printf("First Matrix \n");
+		printMatrix(matrixA, SIZE);
+
+		printf("Second Matrix \n");
+		printMatrix(matrixB, SIZE);
+
+		if(p==1){												//SE C'È UN UNICO PROCESSORE
+			for(i=0; i<SIZE; i++){
+				for(j=0; j<SIZE; j++){
+					for(k=0; k<SIZE; k++){
+						sum = sum + matrixA[i][k]*matrixB[k][j];
+					}
+					matrixC[i][j] = sum;
+					sum = 0;
+				}
+			}
+			printf("Multiplication of the 2 matrix is:\n");
+			printMatrix(matrixC, SIZE);
+		}
+
 		for (source = 1; source < p; source++) {
 			MPI_Recv(message, 100, MPI_CHAR, source, tag,
 					MPI_COMM_WORLD, &status);
@@ -110,7 +115,6 @@ void allocateMatrix(int **matrix, int size){
 
 /*FUNZIONE PER LA CREAZIONE DELLE MATRICI A E B*/
 void createMatrix(int **matrix, int size){
-	srand(time(NULL));										//SEME DELLA FUNZIONE rand()
 	int i,j;
 	for(i = 0; i<size; i++){
 		for(j=0; j<size; j++){
