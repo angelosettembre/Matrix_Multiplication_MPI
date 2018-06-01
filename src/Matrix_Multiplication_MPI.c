@@ -74,7 +74,7 @@ int main(int argc, char* argv[]){
 
 	srand(time(NULL));										//SEME DELLA FUNZIONE rand()
 
-	arraySend = malloc(SIZE*sizeof(int));				//ALLOCAZIONE RIGHE
+	arraySend = (int*) malloc(SIZE+SIZE*sizeof(int));				//ALLOCAZIONE ARRAY
 
 	//ACCEDERE SIZE*i+j
 
@@ -121,19 +121,18 @@ int main(int argc, char* argv[]){
 	receiveCount = SIZE;
 
 	MPI_Bcast(&matrixB[0][0], SIZE*SIZE, MPI_INT, 0, MPI_COMM_WORLD);				//INVIO MATRICE B TRAMITE BROADCAST A TUTTI I PROCESSORI
-	printf("matrix B rank:%d \n", my_rank);
-	printMatrix(matrixB);
+	//printf("matrix B rank:%d \n", my_rank);
+	//printMatrix(matrixB);
 
-	/*MPI_Scatter(*matrixA, SIZE/p, MPI_INT, arraySend[my_rank*SIZE/p], SIZE/p, MPI_INT, 0, MPI_COMM_WORLD);
+	int *contiguousItems = (int *)malloc(SIZE*SIZE*sizeof(int));				//ALLOCAZIONE DI SIZE*SIZE ELEMENTI CONTIGUI
+
+	MPI_Scatter(&matrixA[0][0], SIZE*SIZE/p, MPI_INT, contiguousItems, SIZE*SIZE/p, MPI_INT, 0, MPI_COMM_WORLD);
 	printf("MATRIX AAA rank:%d \n", my_rank);
-	for (i=0; i<SIZE; i++) {
-		printf("\n\t| ");
-		for (j=0; j<SIZE; j++)
-			printf("%2d ", matrixA[i][j]);
-		printf("|");
+	for(i = 0; i<SIZE; i++){
+		printf(" %d ",contiguousItems[i]);
 	}
 	printf("\n");
-	 */
+
 	/*
 	MPI_Scatter(*matrixA, sendCount, MPI_INT, arraySend, receiveCount, MPI_INT, 0, MPI_COMM_WORLD);
 	printf("Rank = %d \n", my_rank);
