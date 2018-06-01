@@ -13,13 +13,12 @@
 #include <string.h>
 #include "mpi.h"
 
-#define SIZE 5									/*Dimensione righe e colonne di ogni matrice*/
+#define SIZE 4									/*Dimensione righe e colonne di ogni matrice*/
 
 /*PROTOTIPI FUNZIONI*/
 void allocateMatrix(int **matrix, int size);
 void createMatrix(int **matrix, int size);
 void printMatrix(int **matrix, int size);
-void createArray(int *array, int **matrix, int position);
 
 int main(int argc, char* argv[]){
 	int  my_rank; /* rank of process */
@@ -45,10 +44,21 @@ int main(int argc, char* argv[]){
 	/* find out number of processes */
 	MPI_Comm_size(MPI_COMM_WORLD, &p);
 
-	if(SIZE % p != 0){									//CONTROLLO SE LA DIMENSIONE DELLA MATRICE È DIVISIBILE PER IL NUM DI PROCESSORI
-		printf("Matrix is not divisible by number of processors \n");
-		MPI_Finalize();
+	/*CONTROLLO SE LA DIMENSIONE DELLA MATRICE È DIVISIBILE PER IL NUM DI PROCESSORI*/
+	if(p > SIZE){
+		if(p % SIZE != 0){
+			printf("Matrix is not divisible by number of processors \n");
+			MPI_Finalize();
+			return 0;
+		}
+	} else {
+		if(SIZE % p != 0){
+			printf("Matrix is not divisible by number of processors \n");
+			MPI_Finalize();
+			return 0;
+		}
 	}
+	/*--------*/
 
 
 	/*ALLOCAZIONE MATRICI*/
@@ -60,7 +70,7 @@ int main(int argc, char* argv[]){
 
 	matrixC = malloc(SIZE*sizeof(int*));				//ALLOCAZIONE RIGHE
 	allocateMatrix(matrixC, SIZE);
-	/*		*/
+	/*--------*/
 
 	srand(time(NULL));										//SEME DELLA FUNZIONE rand()
 
@@ -83,13 +93,13 @@ int main(int argc, char* argv[]){
 		createMatrix(matrixA, SIZE);
 		createMatrix(matrixB, SIZE);
 
-		printf("First Matrix \n");
+		printf("Matrix A \n");
 		printMatrix(matrixA, SIZE);
+		printf("\n");
 
-		printf("Second Matrix \n");
+		printf("Matrix B \n");
 		printMatrix(matrixB, SIZE);
-
-		//arraySend = malloc(SIZE * sizeof(int));					//Allocazione array
+		printf("\n");
 
 		/*
 		if(p==1){												//SE C'È UN UNICO PROCESSORE
@@ -110,16 +120,27 @@ int main(int argc, char* argv[]){
 	sendCount = SIZE;
 	receiveCount = SIZE;
 
-	MPI_Bcast(matrixB, SIZE*SIZE, MPI_INT, 0, MPI_COMM_WORLD);
+	for(i=0; i<SIZE; i++){
+		MPI_Bcast(matrixB[i], SIZE, MPI_INT, 0, MPI_COMM_WORLD);				//INVIO MATRICE B TRAMITE BROADCAST A TUTTI I PROCESSORI
+	}
 
-/*
+	MPI_Scatter(*matrixA, SIZE/p, MPI_INT, arraySend[my_rank*SIZE/p], SIZE/p, MPI_INT, 0, MPI_COMM_WORLD);
+	printf("MATRIX AAA rank:%d \n", my_rank);
+	for (i=0; i<SIZE; i++) {
+		printf("\n\t| ");
+		for (j=0; j<SIZE; j++)
+			printf("%2d ", matrixA[i][j]);
+		printf("|");
+	}
+	printf("\n");
+	/*
 	MPI_Scatter(*matrixA, sendCount, MPI_INT, arraySend, receiveCount, MPI_INT, 0, MPI_COMM_WORLD);
 	printf("Rank = %d \n", my_rank);
 	for(i=0; i<SIZE; i++){
 		printf(" %d ",arraySend[i]);
 	}
 	printf("\n");
-*/
+	 */
 
 	/* shut down MPI */
 	MPI_Finalize();
