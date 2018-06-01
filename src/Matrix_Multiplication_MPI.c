@@ -13,7 +13,7 @@
 #include <string.h>
 #include "mpi.h"
 
-#define SIZE 4									/*Dimensione righe e colonne di ogni matrice*/
+#define SIZE 5									/*Dimensione righe e colonne di ogni matrice*/
 
 /*PROTOTIPI FUNZIONI*/
 void allocateMatrix(int **matrix, int size);
@@ -29,9 +29,10 @@ int main(int argc, char* argv[]){
 	int tag=0;    /* tag for messages */
 	char message[100];        /* storage for message */
 	int **matrixA, **matrixB, **matrixC;					/*MATRICI*/
-	int *arraySend;
 	int i,j,k;
 	int sum = 0;
+	int *arraySend;
+	int sendCount, receiveCount;
 	MPI_Status status ;   /* return status for receive */
 
 	/* start up MPI */
@@ -44,19 +45,26 @@ int main(int argc, char* argv[]){
 	/* find out number of processes */
 	MPI_Comm_size(MPI_COMM_WORLD, &p);
 
+	if(SIZE % p != 0){									//CONTROLLO SE LA DIMENSIONE DELLA MATRICE È DIVISIBILE PER IL NUM DI PROCESSORI
+		printf("Matrix is not divisible by number of processors \n");
+		MPI_Finalize();
+	}
+
 
 	/*ALLOCAZIONE MATRICI*/
-	matrixA = (int**) malloc(SIZE*sizeof(int*));				//ALLOCAZIONE RIGHE
+	matrixA = malloc(SIZE*sizeof(int*));				//ALLOCAZIONE RIGHE
 	allocateMatrix(matrixA, SIZE);
 
-	matrixB = (int**) malloc(SIZE*sizeof(int*));				//ALLOCAZIONE RIGHE
+	matrixB = malloc(SIZE*sizeof(int*));				//ALLOCAZIONE RIGHE
 	allocateMatrix(matrixB, SIZE);
 
-	matrixC = (int**) malloc(SIZE*sizeof(int*));				//ALLOCAZIONE RIGHE
+	matrixC = malloc(SIZE*sizeof(int*));				//ALLOCAZIONE RIGHE
 	allocateMatrix(matrixC, SIZE);
 	/*		*/
 
 	srand(time(NULL));										//SEME DELLA FUNZIONE rand()
+
+	arraySend = malloc(SIZE*sizeof(int));				//ALLOCAZIONE RIGHE
 
 	//ACCEDERE SIZE*i+j
 
@@ -81,12 +89,7 @@ int main(int argc, char* argv[]){
 		printf("Second Matrix \n");
 		printMatrix(matrixB, SIZE);
 
-		arraySend = malloc(SIZE * sizeof(int));					//Allocazione array
-		createArray(arraySend, matrixA, 0);						//CREAZIONE ARRAY
-
-		for(i=0; i<SIZE; i++){
-			printf("%d", arraySend[i]);
-		}
+		//arraySend = malloc(SIZE * sizeof(int));					//Allocazione array
 
 		/*
 		if(p==1){												//SE C'È UN UNICO PROCESSORE
@@ -102,13 +105,22 @@ int main(int argc, char* argv[]){
 			printf("Multiplication of the 2 matrix is:\n");
 			printMatrix(matrixC, SIZE);
 		}
-		*/
-		for (source = 1; source < p; source++) {
-			MPI_Recv(message, 100, MPI_CHAR, source, tag,
-					MPI_COMM_WORLD, &status);
-			printf("%s\n",message);
-		}
+		 */
 	}
+	sendCount = SIZE;
+	receiveCount = SIZE;
+
+	MPI_Bcast(matrixB, SIZE*SIZE, MPI_INT, 0, MPI_COMM_WORLD);
+
+/*
+	MPI_Scatter(*matrixA, sendCount, MPI_INT, arraySend, receiveCount, MPI_INT, 0, MPI_COMM_WORLD);
+	printf("Rank = %d \n", my_rank);
+	for(i=0; i<SIZE; i++){
+		printf(" %d ",arraySend[i]);
+	}
+	printf("\n");
+*/
+
 	/* shut down MPI */
 	MPI_Finalize();
 
@@ -120,7 +132,7 @@ void allocateMatrix(int **matrix, int size){
 	int i;
 
 	for(i=0;i<SIZE;i++)
-		matrix[i]=(int*)malloc(SIZE*sizeof(int));			//ALLOCAZIONE COLONNE
+		matrix[i]= malloc(SIZE*sizeof(int));			//ALLOCAZIONE DELLE RIGHE COME ARRAY
 }
 
 /*FUNZIONE PER LA CREAZIONE DELLE MATRICI A E B*/
@@ -142,13 +154,5 @@ void printMatrix(int **matrix, int size){
 			printf("%d\t",matrix[i][j]);
 		}
 		printf("\n");
-	}
-}
-
-/*FUNZIONE PER LA CREAZIONE DEL PRIMO ARRY*/
-void createArray(int *array, int **matrix, int position){
-	int i;
-	for(i=0; i<SIZE; i++){
-		array[i] = matrix[0][i];
 	}
 }
