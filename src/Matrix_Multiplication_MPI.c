@@ -92,9 +92,6 @@ int main(int argc, char* argv[]){
 		/* create message */
 		sprintf(message, "Matrix Multiplication MPI from process %d!", my_rank);
 		dest = 0;
-		/* use strlen+1 so that '\0' get transmitted */
-		MPI_Send(message, strlen(message)+1, MPI_CHAR,
-				dest, tag, MPI_COMM_WORLD);
 	}
 	else{																			//SE IL PROCESSORE È IL MASTER
 		printf("Matrix Multiplication MPI From process 0: Num processes: %d\n",p);
@@ -140,10 +137,11 @@ int main(int argc, char* argv[]){
 					printf("%2d ", matrixSend[i][j]);
 				printf("|");
 			}*/
-		/*for(i = 0; i<SIZE; i++){
-				printf(" %d ",arraySend[i]);
-			}
-			printf("\n");*/
+		printf("My rank (%d) ", my_rank);
+		for(i = 0; i<SIZE; i++){
+			printf(" %d ",arraySend[i]);
+		}
+		printf("\n");
 
 		/*CALCOLO MOLTIPLICAZIONE TRA ARRAY E MATRICE B*/
 		for(i=fromProcess; i<toProcess; i++){
