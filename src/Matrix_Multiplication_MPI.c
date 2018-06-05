@@ -13,7 +13,7 @@
 #include <string.h>
 #include "mpi.h"
 
-#define SIZE 4									/*Dimensione righe e colonne di ogni matrice*/
+#define SIZE 20									/*Dimensione righe e colonne di ogni matrice*/
 int matrixSend[SIZE][SIZE];
 
 /*PROTOTIPI FUNZIONI*/
@@ -48,7 +48,7 @@ int main(int argc, char* argv[]){
 	if(p > SIZE){
 		if(p % SIZE != 0){
 			if(my_rank == 0){
-				printf("Matrix is not divisible by number of processors \n");
+				printf("Matrix is not divisible by number of processors \n\n");
 				printf("----BYE----");
 			}
 			MPI_Finalize();
@@ -57,7 +57,7 @@ int main(int argc, char* argv[]){
 	} else {
 		if(SIZE % p != 0){
 			if(my_rank == 0){
-				printf("Matrix is not divisible by number of processors \n");
+				printf("Matrix is not divisible by number of processors \n\n");
 				printf("----BYE----");
 			}
 			MPI_Finalize();
@@ -101,11 +101,11 @@ int main(int argc, char* argv[]){
 	}
 
 	if(p != 1){																			//SE IL NUMERO DI PROCESSI NON E' 1
-		MPI_Bcast(&matrixB[0][0], SIZE*SIZE, MPI_INT, 0, MPI_COMM_WORLD);				//INVIO MATRICE B TRAMITE BROADCAST A TUTTI I PROCESSORI
+		MPI_Bcast(&matrixB[0][0], SIZE*SIZE, MPI_INT, 0, MPI_COMM_WORLD);				//INVIO MATRICE B TRAMITE UNA BROADCAST A TUTTI I PROCESSORI
 		//printf("matrix B rank:%d \n", my_rank);
 		//printMatrix(matrixB);
 
-		if(p == 2){																													//SE CI SONO 2 PROCESSORI
+		if(p != SIZE){
 			MPI_Scatter(*matrixA, SIZE*SIZE/p, MPI_INT, matrixSend[fromProcess], SIZE*SIZE/p, MPI_INT, 0, MPI_COMM_WORLD);			//INVIO RIGHE MATRICE A AD OGNI PROCESSO
 			printf("MATRIX Temp rank:%d \n", my_rank);
 			for(i=0; i<SIZE; i++){
@@ -129,13 +129,13 @@ int main(int argc, char* argv[]){
 
 			MPI_Gather(&matrixC[fromProcess][0], SIZE*SIZE/p, MPI_INT, &matrixC[0][0], SIZE*SIZE/p, MPI_INT, 0, MPI_COMM_WORLD);
 
-		} else {
+		} else {																											//SE IL NUMERO DI PROCESSORI È UGUALE ALLA DIMENSIONE DELLE MATRICI
 			arraySend = (int*) malloc(SIZE*SIZE*sizeof(int));				//ALLOCAZIONE ARRAY
 
 			MPI_Scatter(*matrixA, SIZE*SIZE/p, MPI_INT, arraySend, SIZE*SIZE/p, MPI_INT, 0, MPI_COMM_WORLD);			//INVIO RIGHE MATRICE A AD OGNI PROCESSO
 
 			printf("My rank (%d) ", my_rank);
-			for(i = 0; i<SIZE; i++){
+			for(i = 0; i<SIZE*SIZE/p; i++){
 				printf(" %d ",arraySend[i]);
 			}
 			printf("\n");
@@ -169,7 +169,7 @@ int main(int argc, char* argv[]){
 	}
 
 	if (my_rank == 0) {
-		printf("The multiplication between the two matrix is:\n");
+		printf("\nThe multiplication between the two matrix is:\n");
 		printMatrix(matrixC);
 		printf("\n\n");
 	}
