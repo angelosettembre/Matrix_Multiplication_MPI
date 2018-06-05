@@ -14,6 +14,7 @@
 #include "mpi.h"
 
 #define SIZE 4									/*Dimensione righe e colonne di ogni matrice*/
+int matrixSend[SIZE][SIZE];
 
 /*PROTOTIPI FUNZIONI*/
 void allocateMatrix(int **matrix);
@@ -26,7 +27,6 @@ int main(int argc, char* argv[]){
 	int source;   /* rank of sender */
 	int dest;     /* rank of receiver */
 	int tag=0;    /* tag for messages */
-	char message[100];        /* storage for message */
 	int **matrixA, **matrixB, **matrixC; 					/*MATRICI*/
 	int i,j,k;
 	int fromProcess, toProcess;
@@ -80,20 +80,12 @@ int main(int argc, char* argv[]){
 
 	srand(time(NULL));										//SEME DELLA FUNZIONE rand()
 
-	arraySend = (int*) malloc(SIZE*SIZE*sizeof(int));				//ALLOCAZIONE ARRAY
-
 	//ACCEDERE SIZE*i+j
 
 	fromProcess = my_rank * SIZE/p;
 	toProcess = (my_rank+1) * SIZE/p;
 
-
-	if (my_rank !=0){
-		/* create message */
-		sprintf(message, "Matrix Multiplication MPI from process %d!", my_rank);
-		dest = 0;
-	}
-	else{																			//SE IL PROCESSORE È IL MASTER
+	if (my_rank ==0){																			//SE IL PROCESSORE È IL MASTER
 		printf("Matrix Multiplication MPI From process 0: Num processes: %d\n",p);
 		/*COSTRUZIONE MATRICI*/
 		createMatrix(matrixA);
@@ -106,22 +98,6 @@ int main(int argc, char* argv[]){
 		printf("Matrix B \n");
 		printMatrix(matrixB);
 		printf("\n");
-
-		/*
-		if(p==1){												//SE C'È UN UNICO PROCESSORE
-			for(i=0; i<SIZE; i++){
-				for(j=0; j<SIZE; j++){
-					for(k=0; k<SIZE; k++){
-						sum = sum + matrixA[i][k]*matrixB[k][j];
-					}
-					matrixC[i][j] = sum;
-					sum = 0;
-				}
-			}
-			printf("Multiplication of the 2 matrix is:\n");
-			printMatrix(matrixC, SIZE);
-		}
-		 */
 	}
 
 	if(p != 1){																			//SE IL NUMERO DI PROCESSI NON E' 1
@@ -129,43 +105,58 @@ int main(int argc, char* argv[]){
 		//printf("matrix B rank:%d \n", my_rank);
 		//printMatrix(matrixB);
 
-		MPI_Scatter(*matrixA, SIZE*SIZE/p, MPI_INT, arraySend, SIZE*SIZE/p, MPI_INT, 0, MPI_COMM_WORLD);			//INVIO RIGHE MATRICE A AD OGNI PROCESSO
-		/*printf("MATRIX Temp rank:%d \n", my_rank);
-			for (i=0; i<SIZE; i++) {
-				printf("\n\t| ");
-				for (j=0; j<SIZE; j++)
-					printf("%2d ", matrixSend[i][j]);
-				printf("|");
-			}*/
-		printf("My rank (%d) ", my_rank);
-		for(i = 0; i<SIZE; i++){
-			printf(" %d ",arraySend[i]);
-		}
-		printf("\n");
-
-		/*CALCOLO MOLTIPLICAZIONE TRA ARRAY E MATRICE B*/
-		for(i=fromProcess; i<toProcess; i++){
-			for(j=0; j<SIZE; j++){
-				for(k=0; k<SIZE; k++){
-					sum = sum + arraySend[k]*matrixB[k][j];
+		if(p == 2){																													//SE CI SONO 2 PROCESSORI
+			MPI_Scatter(*matrixA, SIZE*SIZE/p, MPI_INT, matrixSend[fromProcess], SIZE*SIZE/p, MPI_INT, 0, MPI_COMM_WORLD);			//INVIO RIGHE MATRICE A AD OGNI PROCESSO
+			printf("MATRIX Temp rank:%d \n", my_rank);
+			for(i=0; i<SIZE; i++){
+				for(j=0; j<SIZE; j++){
+					printf("%d\t",matrixSend[i][j]);
 				}
-				matrixC[i][j] = sum;
-				sum = 0;
+				printf("\n");
 			}
+
+			/*CALCOLO MOLTIPLICAZIONE TRA MATRICE RICEVUTA E MATRICE B*/
+			for(i=fromProcess; i<toProcess; i++){
+				for(j=0; j<SIZE; j++){
+					for(k=0; k<SIZE; k++){
+						sum = sum + matrixSend[i][k]*matrixB[k][j];
+					}
+					matrixC[i][j] = sum;
+					sum = 0;
+				}
+			}
+			/*-------*/
+
+			MPI_Gather(&matrixC[fromProcess][0], SIZE*SIZE/p, MPI_INT, &matrixC[0][0], SIZE*SIZE/p, MPI_INT, 0, MPI_COMM_WORLD);
+
+		} else {
+			arraySend = (int*) malloc(SIZE*SIZE*sizeof(int));				//ALLOCAZIONE ARRAY
+
+			MPI_Scatter(*matrixA, SIZE*SIZE/p, MPI_INT, arraySend, SIZE*SIZE/p, MPI_INT, 0, MPI_COMM_WORLD);			//INVIO RIGHE MATRICE A AD OGNI PROCESSO
+
+			printf("My rank (%d) ", my_rank);
+			for(i = 0; i<SIZE; i++){
+				printf(" %d ",arraySend[i]);
+			}
+			printf("\n");
+
+			/*CALCOLO MOLTIPLICAZIONE TRA ARRAY E MATRICE B*/
+			for(i=fromProcess; i<toProcess; i++){
+				for(j=0; j<SIZE; j++){
+					for(k=0; k<SIZE; k++){
+						sum = sum + arraySend[k]*matrixB[k][j];
+					}
+					matrixC[i][j] = sum;
+					sum = 0;
+				}
+			}
+			/*-------*/
+
+			MPI_Gather(&matrixC[fromProcess][0], SIZE*SIZE/p, MPI_INT, &matrixC[0][0], SIZE*SIZE/p, MPI_INT, 0, MPI_COMM_WORLD);
 		}
-		/*-------*/
-
-		MPI_Gather(&matrixC[fromProcess][0], SIZE*SIZE/p, MPI_INT, &matrixC[0][0], SIZE*SIZE/p, MPI_INT, 0, MPI_COMM_WORLD);
-
-		if (my_rank == 0) {
-			printf("Multiplication of the 2 matrix is:\n");
-			printMatrix(matrixC);
-			printf("\n\n");
-		}
-
-	} else {
-		/*CALCOLO MOLTIPLICAZIONE TRA ARRAY E MATRICE B*/
-		for(i=fromProcess; i<toProcess; i++){
+	} else {																		//SE C'È UN UNICO PROCESSORE
+		/*CALCOLO MOLTIPLICAZIONE TRA MATRICE A E MATRICE B*/
+		for(i=0; i<SIZE; i++){
 			for(j=0; j<SIZE; j++){
 				for(k=0; k<SIZE; k++){
 					sum = sum + matrixA[i][k]*matrixB[k][j];
@@ -175,9 +166,14 @@ int main(int argc, char* argv[]){
 			}
 		}
 		/*-------*/
+	}
+
+	if (my_rank == 0) {
 		printf("The multiplication between the two matrix is:\n");
 		printMatrix(matrixC);
+		printf("\n\n");
 	}
+
 	/* shut down MPI */
 	MPI_Finalize();
 
