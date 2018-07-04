@@ -13,21 +13,19 @@
 #include <string.h>
 #include "mpi.h"
 
-#define SIZE 20									/*Dimensione righe e colonne di ogni matrice*/
-int matrixSend[SIZE][SIZE];
 
 /*PROTOTIPI FUNZIONI*/
-void allocateMatrix(int **matrix);
-void createMatrix(int **matrix);
-void printMatrix(int **matrix);
+void allocateMatrix(int **matrix, int size);
+void createMatrix(int **matrix, int size);
+void initMatrixSend(int **matrix, int size);
+void printMatrix(int **matrix, int size);
 
 int main(int argc, char* argv[]){
+	int SIZE;									/*Dimensione righe e colonne di ogni matrice*/
 	int  my_rank; /* rank of process */
 	int  p;       /* number of processes */
-	int source;   /* rank of sender */
-	int dest;     /* rank of receiver */
-	int tag=0;    /* tag for messages */
 	int **matrixA, **matrixB, **matrixC; 					/*MATRICI*/
+	int **matrixSend;
 	int i,j,k;
 	int fromProcess, toProcess;
 	int sum = 0;
@@ -43,6 +41,11 @@ int main(int argc, char* argv[]){
 
 	/* find out number of processes */
 	MPI_Comm_size(MPI_COMM_WORLD, &p);
+
+	SIZE = atoi(argv[1]);
+
+	//int matrixSend[SIZE][SIZE];
+
 
 	/*CONTROLLO SE LA DIMENSIONE DELLA MATRICE È DIVISIBILE PER IL NUM DI PROCESSORI*/
 	if(p > SIZE){
@@ -69,13 +72,13 @@ int main(int argc, char* argv[]){
 
 	/*ALLOCAZIONE MATRICI (PUNTATORI DI PUNTATORI) NEL HEAP*/
 	matrixA = (int **) malloc(SIZE*sizeof(int*));				//ALLOCAZIONE PER RIGHE
-	allocateMatrix(matrixA);
+	allocateMatrix(matrixA, SIZE);
 
 	matrixB = (int **) malloc(SIZE*sizeof(int*));				//ALLOCAZIONE PER RIGHE
-	allocateMatrix(matrixB);
+	allocateMatrix(matrixB, SIZE);
 
 	matrixC = (int **) malloc(SIZE*sizeof(int*));				//ALLOCAZIONE PER RIGHE
-	allocateMatrix(matrixC);
+	allocateMatrix(matrixC, SIZE);
 	/*--------*/
 
 	srand(time(NULL));										//SEME DELLA FUNZIONE rand()
@@ -88,24 +91,26 @@ int main(int argc, char* argv[]){
 	if (my_rank ==0){																			//SE IL PROCESSORE È IL MASTER
 		printf("Matrix Multiplication MPI From process 0: Num processes: %d\n",p);
 		/*COSTRUZIONE MATRICI*/
-		createMatrix(matrixA);
-		createMatrix(matrixB);
+		createMatrix(matrixA, SIZE);
+		createMatrix(matrixB, SIZE);
 
 		printf("Matrix A \n");
-		printMatrix(matrixA);
+		printMatrix(matrixA, SIZE);
 		printf("\n");
 
 		printf("Matrix B \n");
-		printMatrix(matrixB);
+		printMatrix(matrixB, SIZE);
 		printf("\n");
 	}
 
 	if(p != 1){																			//SE IL NUMERO DI PROCESSI NON E' 1
 		MPI_Bcast(&matrixB[0][0], SIZE*SIZE, MPI_INT, 0, MPI_COMM_WORLD);				//INVIO MATRICE B TRAMITE UNA BROADCAST A TUTTI I PROCESSORI
-		//printf("matrix B rank:%d \n", my_rank);
-		//printMatrix(matrixB);
 
 		if(p != SIZE){
+			matrixSend = (int **) malloc(SIZE*sizeof(int*));			//ALLOCAZIONE PER RIGHE
+			allocateMatrix(matrixSend, SIZE);
+			initMatrixSend(matrixSend, SIZE);
+
 			MPI_Scatter(*matrixA, SIZE*SIZE/p, MPI_INT, matrixSend[fromProcess], SIZE*SIZE/p, MPI_INT, 0, MPI_COMM_WORLD);			//INVIO RIGHE MATRICE A AD OGNI PROCESSO
 			printf("MATRIX Temp rank:%d \n", my_rank);
 			for(i=0; i<SIZE; i++){
@@ -170,7 +175,7 @@ int main(int argc, char* argv[]){
 
 	if (my_rank == 0) {
 		printf("\nThe multiplication between the two matrix is:\n");
-		printMatrix(matrixC);
+		printMatrix(matrixC, SIZE);
 		printf("\n\n");
 	}
 
@@ -181,31 +186,41 @@ int main(int argc, char* argv[]){
 }
 
 /*FUNZIONE PER L'ALLOCAZIONE DI MATRICI*/
-void allocateMatrix(int **matrix){
+void allocateMatrix(int **matrix, int size){
 	int i;
-	int *contiguousItems = (int *)malloc(SIZE*SIZE*sizeof(int));				//ALLOCAZIONE DI SIZE*SIZE ELEMENTI CONTIGUI
+	int *contiguousItems = (int *)malloc(size*size*sizeof(int));				//ALLOCAZIONE DI SIZE*SIZE ELEMENTI CONTIGUI
 
-	for(i=0;i<SIZE;i++)
-		matrix[i]= &contiguousItems[i*SIZE];			//SI RENDE LA MATRICE COME UN ARRAY
+	for(i=0;i<size;i++)
+		matrix[i]= &contiguousItems[i*size];			//SI RENDE LA MATRICE COME UN ARRAY
 }
 
 /*FUNZIONE PER LA CREAZIONE DELLE MATRICI A E B*/
-void createMatrix(int **matrix){
+void createMatrix(int **matrix, int size){
 	int i,j;
-	for(i = 0; i<SIZE; i++){
-		for(j=0; j<SIZE; j++){
+	for(i = 0; i<size; i++){
+		for(j=0; j<size; j++){
 			matrix[i][j] = rand() % 10;						//Valori tra 0 e 9 esclusi
 		}
 	}
 }
 
+/*FUNZIONE PER LA INIZIALIZZAZIONE DI MATRIX SEND*/
+void initMatrixSend(int **matrix, int size){
+	int i,j;
+	for(i = 0; i<size; i++){
+		for(j=0; j<size; j++){
+			matrix[i][j] = 0;						//Valori tra 0 e 9 esclusi
+		}
+	}
+}
+
 /*FUNZIONE PER LA STAMPA DELLE MATRICI*/
-void printMatrix(int **matrix){
+void printMatrix(int **matrix, int size){
 
 	int i,j;
-	for(i = 0; i<SIZE; i++){
+	for(i = 0; i<size; i++){
 		printf("\n\t[");
-		for(j=0; j<SIZE; j++){
+		for(j=0; j<size; j++){
 			printf(" %d ",matrix[i][j]);
 		}
 		printf("]");
