@@ -29,6 +29,7 @@ int main(int argc, char* argv[]){
 	int i,j,k;
 	int fromProcess, toProcess;
 	int sum = 0;
+	double startTime, endTime;
 	int *arraySend;
 	MPI_Datatype matrixType;				/*Tipo derivato per le matrici*/
 
@@ -101,6 +102,7 @@ int main(int argc, char* argv[]){
 	}
 
 	if(p != 1){																			//SE IL NUMERO DI PROCESSI NON E' 1
+		startTime = MPI_Wtime();
 		MPI_Bcast(&matrixB[0][0], SIZE*SIZE, MPI_INT, 0, MPI_COMM_WORLD);				//INVIO MATRICE B TRAMITE UNA BROADCAST A TUTTI I PROCESSORI
 
 		/*SUDDIVISIONE: ad ogni processo viene assegnato un certo numero di righe, (anche il master partecipa alla computazione)*/
@@ -135,7 +137,7 @@ int main(int argc, char* argv[]){
 
 			MPI_Gather(&matrixC[fromProcess][0], 1, matrixType, &matrixC[0][0], 1, matrixType, 0, MPI_COMM_WORLD);			//Ogni processo invia la propria porzione di matrice alla matrice C risultante
 
-		} else {																											//SE IL NUMERO DI PROCESSORI È UGUALE ALLA DIMENSIONE DELLE MATRICI
+		} else {															//SE IL NUMERO DI PROCESSORI È UGUALE ALLA DIMENSIONE DELLE MATRICI
 			arraySend = (int*) malloc(SIZE*SIZE*sizeof(int));				//ALLOCAZIONE ARRAY DOVE OGNI PROCESSORE AVRA' UNA RIGA
 
 			MPI_Scatter(*matrixA, 1, matrixType, arraySend, 1, matrixType, 0, MPI_COMM_WORLD);			//INVIO RIGHE MATRICE (A) AD OGNI PROCESSO
@@ -178,6 +180,8 @@ int main(int argc, char* argv[]){
 		printf("\nThe multiplication between the two matrix is:\n");
 		printMatrix(matrixC, SIZE);
 		printf("\n\n");
+		endTime = MPI_Wtime();
+		printf( "Elapsed time is %f\n", endTime - startTime);
 	}
 
 	/* shut down MPI */
