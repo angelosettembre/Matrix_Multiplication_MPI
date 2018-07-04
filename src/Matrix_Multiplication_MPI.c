@@ -30,7 +30,7 @@ int main(int argc, char* argv[]){
 	int fromProcess, toProcess;
 	int sum = 0;
 	int *arraySend;
-	MPI_Status status ;   /* return status for receive */
+	MPI_Datatype matrixType;				/*Tipo derivato per le matrici*/
 
 	/* start up MPI */
 
@@ -43,7 +43,6 @@ int main(int argc, char* argv[]){
 	MPI_Comm_size(MPI_COMM_WORLD, &p);
 
 	SIZE = atoi(argv[1]);					//Dimensione matrice da riga di comando
-
 
 	/*CONTROLLO SE LA DIMENSIONE DELLA MATRICE È DIVISIBILE PER IL NUM DI PROCESSORI*/
 	if(p > SIZE){
@@ -104,13 +103,16 @@ int main(int argc, char* argv[]){
 	if(p != 1){																			//SE IL NUMERO DI PROCESSI NON E' 1
 		MPI_Bcast(&matrixB[0][0], SIZE*SIZE, MPI_INT, 0, MPI_COMM_WORLD);				//INVIO MATRICE B TRAMITE UNA BROADCAST A TUTTI I PROCESSORI
 
+		/*SUDDIVISIONE: ad ogni processo viene assegnato un certo numero di righe, (anche il master partecipa alla computazione)*/
+		MPI_Type_contiguous(SIZE*SIZE/p, MPI_INT, &matrixType);							/*Replicazione del tipo di dato (matrixType) in posizioni contigue*/
+		MPI_Type_commit(&matrixType);
+
 		if(p != SIZE){
 			matrixSend = (int **) malloc(SIZE*sizeof(int*));			//ALLOCAZIONE PER RIGHE DELLA MATRICE
 			allocateMatrix(matrixSend, SIZE);
 			initMatrixSend(matrixSend, SIZE);							//Inizializzazione matrice
 
-			/*SUDDIVISIONE: ad ogni processo viene assegnato un certo numero di righe, (anche il master partecipa alla computazione)*/
-			MPI_Scatter(*matrixA, SIZE*SIZE/p, MPI_INT, matrixSend[fromProcess], SIZE*SIZE/p, MPI_INT, 0, MPI_COMM_WORLD);			//INVIO RIGHE DELLA MATRICE (A) AD OGNI PROCESSO
+			MPI_Scatter(*matrixA, 1, matrixType, matrixSend[fromProcess], 1, matrixType, 0, MPI_COMM_WORLD);			//INVIO RIGHE DELLA MATRICE (A) AD OGNI PROCESSO
 			printf("MATRIX Temp rank:%d \n", my_rank);
 			for(i=0; i<SIZE; i++){
 				for(j=0; j<SIZE; j++){
@@ -131,12 +133,12 @@ int main(int argc, char* argv[]){
 			}
 			/*-------*/
 
-			MPI_Gather(&matrixC[fromProcess][0], SIZE*SIZE/p, MPI_INT, &matrixC[0][0], SIZE*SIZE/p, MPI_INT, 0, MPI_COMM_WORLD);			//Ogni processo invia la propria porzione di matrice alla matrice C risultante
+			MPI_Gather(&matrixC[fromProcess][0], 1, matrixType, &matrixC[0][0], 1, matrixType, 0, MPI_COMM_WORLD);			//Ogni processo invia la propria porzione di matrice alla matrice C risultante
 
 		} else {																											//SE IL NUMERO DI PROCESSORI È UGUALE ALLA DIMENSIONE DELLE MATRICI
 			arraySend = (int*) malloc(SIZE*SIZE*sizeof(int));				//ALLOCAZIONE ARRAY DOVE OGNI PROCESSORE AVRA' UNA RIGA
 
-			MPI_Scatter(*matrixA, SIZE*SIZE/p, MPI_INT, arraySend, SIZE*SIZE/p, MPI_INT, 0, MPI_COMM_WORLD);			//INVIO RIGHE MATRICE (A) AD OGNI PROCESSO
+			MPI_Scatter(*matrixA, 1, matrixType, arraySend, 1, matrixType, 0, MPI_COMM_WORLD);			//INVIO RIGHE MATRICE (A) AD OGNI PROCESSO
 
 			printf("My rank (%d) ", my_rank);
 			for(i = 0; i<SIZE*SIZE/p; i++){
@@ -156,7 +158,7 @@ int main(int argc, char* argv[]){
 			}
 			/*-------*/
 
-			MPI_Gather(&matrixC[fromProcess][0], SIZE*SIZE/p, MPI_INT, &matrixC[0][0], SIZE*SIZE/p, MPI_INT, 0, MPI_COMM_WORLD);
+			MPI_Gather(&matrixC[fromProcess][0], 1, matrixType, &matrixC[0][0], 1, matrixType, 0, MPI_COMM_WORLD);
 		}
 	} else {																		//SE C'È UN UNICO PROCESSORE
 		/*CALCOLO MOLTIPLICAZIONE TRA MATRICE A E MATRICE B*/
