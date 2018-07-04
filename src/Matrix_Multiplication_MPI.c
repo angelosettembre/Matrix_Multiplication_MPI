@@ -42,9 +42,7 @@ int main(int argc, char* argv[]){
 	/* find out number of processes */
 	MPI_Comm_size(MPI_COMM_WORLD, &p);
 
-	SIZE = atoi(argv[1]);
-
-	//int matrixSend[SIZE][SIZE];
+	SIZE = atoi(argv[1]);					//Dimensione matrice da riga di comando
 
 
 	/*CONTROLLO SE LA DIMENSIONE DELLA MATRICE È DIVISIBILE PER IL NUM DI PROCESSORI*/
@@ -85,7 +83,7 @@ int main(int argc, char* argv[]){
 
 	//ACCEDERE SIZE*i+j
 
-	fromProcess = my_rank * SIZE/p;
+	fromProcess = my_rank * SIZE/p;							//Porzione di matrice di ogni processore
 	toProcess = (my_rank+1) * SIZE/p;
 
 	if (my_rank ==0){																			//SE IL PROCESSORE È IL MASTER
@@ -107,11 +105,12 @@ int main(int argc, char* argv[]){
 		MPI_Bcast(&matrixB[0][0], SIZE*SIZE, MPI_INT, 0, MPI_COMM_WORLD);				//INVIO MATRICE B TRAMITE UNA BROADCAST A TUTTI I PROCESSORI
 
 		if(p != SIZE){
-			matrixSend = (int **) malloc(SIZE*sizeof(int*));			//ALLOCAZIONE PER RIGHE
+			matrixSend = (int **) malloc(SIZE*sizeof(int*));			//ALLOCAZIONE PER RIGHE DELLA MATRICE
 			allocateMatrix(matrixSend, SIZE);
-			initMatrixSend(matrixSend, SIZE);
+			initMatrixSend(matrixSend, SIZE);							//Inizializzazione matrice
 
-			MPI_Scatter(*matrixA, SIZE*SIZE/p, MPI_INT, matrixSend[fromProcess], SIZE*SIZE/p, MPI_INT, 0, MPI_COMM_WORLD);			//INVIO RIGHE MATRICE A AD OGNI PROCESSO
+			/*SUDDIVISIONE: ad ogni processo viene assegnato un certo numero di righe, (anche il master partecipa alla computazione)*/
+			MPI_Scatter(*matrixA, SIZE*SIZE/p, MPI_INT, matrixSend[fromProcess], SIZE*SIZE/p, MPI_INT, 0, MPI_COMM_WORLD);			//INVIO RIGHE DELLA MATRICE (A) AD OGNI PROCESSO
 			printf("MATRIX Temp rank:%d \n", my_rank);
 			for(i=0; i<SIZE; i++){
 				for(j=0; j<SIZE; j++){
@@ -132,12 +131,12 @@ int main(int argc, char* argv[]){
 			}
 			/*-------*/
 
-			MPI_Gather(&matrixC[fromProcess][0], SIZE*SIZE/p, MPI_INT, &matrixC[0][0], SIZE*SIZE/p, MPI_INT, 0, MPI_COMM_WORLD);
+			MPI_Gather(&matrixC[fromProcess][0], SIZE*SIZE/p, MPI_INT, &matrixC[0][0], SIZE*SIZE/p, MPI_INT, 0, MPI_COMM_WORLD);			//Ogni processo invia la propria porzione di matrice alla matrice C risultante
 
 		} else {																											//SE IL NUMERO DI PROCESSORI È UGUALE ALLA DIMENSIONE DELLE MATRICI
-			arraySend = (int*) malloc(SIZE*SIZE*sizeof(int));				//ALLOCAZIONE ARRAY
+			arraySend = (int*) malloc(SIZE*SIZE*sizeof(int));				//ALLOCAZIONE ARRAY DOVE OGNI PROCESSORE AVRA' UNA RIGA
 
-			MPI_Scatter(*matrixA, SIZE*SIZE/p, MPI_INT, arraySend, SIZE*SIZE/p, MPI_INT, 0, MPI_COMM_WORLD);			//INVIO RIGHE MATRICE A AD OGNI PROCESSO
+			MPI_Scatter(*matrixA, SIZE*SIZE/p, MPI_INT, arraySend, SIZE*SIZE/p, MPI_INT, 0, MPI_COMM_WORLD);			//INVIO RIGHE MATRICE (A) AD OGNI PROCESSO
 
 			printf("My rank (%d) ", my_rank);
 			for(i = 0; i<SIZE*SIZE/p; i++){
