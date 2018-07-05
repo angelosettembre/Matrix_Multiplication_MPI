@@ -123,13 +123,13 @@ int main(int argc, char* argv[]){
 			MPI_Scatter(*matrixA, 1, matrixType, matrixSend[fromProcess], 1, matrixType, 0, MPI_COMM_WORLD);			//INVIO RIGHE DELLA MATRICE (A) AD OGNI PROCESSO
 
 			/*STAMPA DELLA MATRICE TEMPORANEA DI OGNI PROCESSO*/
-			printf("MATRIX Temp rank:%d \n", my_rank);
+			/*printf("MATRIX Temp rank:%d \n", my_rank);
 			for(i=0; i<SIZE; i++){
 				for(j=0; j<SIZE; j++){
 					printf("%d\t",matrixSend[i][j]);
 				}
 				printf("\n");
-			}
+			}*/
 			/*-----*/
 
 			/*CALCOLO MOLTIPLICAZIONE TRA MATRICE RICEVUTA E MATRICE B*/
