@@ -89,7 +89,7 @@ int main(int argc, char* argv[]){
 	/*------*/
 
 	if (my_rank ==0){																			//SE IL PROCESSORE È IL MASTER
-		printf("Matrix Multiplication MPI From process 0: Num processes: %d Matrix size: %d\n", p, SIZE);
+		printf("Matrix Multiplication MPI From process 0, Num processes: %d, Matrix size: %d\n", p, SIZE);
 		/*COSTRUZIONE MATRICI*/
 		createMatrix(matrixA, SIZE);
 		createMatrix(matrixB, SIZE);
@@ -115,7 +115,10 @@ int main(int argc, char* argv[]){
 		if(p != SIZE){
 			matrixSend = (int **) malloc(SIZE*sizeof(int*));			//ALLOCAZIONE PER RIGHE DELLA MATRICE IN CUI OGNI PROCESSO EFFETTUA LA COMPUTAZIONE
 			allocateMatrix(matrixSend, SIZE);
-			initMatrixSend(matrixSend, SIZE);							//Inizializzazione matrice
+			if(my_rank == 0){
+				initMatrixSend(matrixSend, SIZE);							//Inizializzazione matrixSend da parte del master
+				printf("Portion assigned to each process: %d\n\n", SIZE/p);
+			}
 
 			MPI_Scatter(*matrixA, 1, matrixType, matrixSend[fromProcess], 1, matrixType, 0, MPI_COMM_WORLD);			//INVIO RIGHE DELLA MATRICE (A) AD OGNI PROCESSO
 
@@ -223,7 +226,7 @@ void initMatrixSend(int **matrix, int size){
 	int i,j;
 	for(i = 0; i<size; i++){
 		for(j=0; j<size; j++){
-			matrix[i][j] = 0;						//Valori tra 0 e 9 esclusi
+			matrix[i][j] = 0;
 		}
 	}
 }
