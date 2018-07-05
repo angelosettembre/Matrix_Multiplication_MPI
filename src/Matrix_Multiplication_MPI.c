@@ -174,6 +174,7 @@ int main(int argc, char* argv[]){
 			MPI_Gather(&matrixC[fromProcess][0], 1, matrixType, &matrixC[0][0], 1, matrixType, 0, MPI_COMM_WORLD);
 		}
 	} else {																		//SE C'È UN UNICO PROCESSORE
+		startTime = MPI_Wtime();														//Acquisizione del tempo di inizio della computazione
 		/*CALCOLO MOLTIPLICAZIONE TRA MATRICE A E MATRICE B*/
 		for(i=0; i<SIZE; i++){
 			for(j=0; j<SIZE; j++){
@@ -187,16 +188,27 @@ int main(int argc, char* argv[]){
 		/*-------*/
 	}
 
+	endTime = MPI_Wtime();													//Acquisizione tempo di fine della computazione
+
 	/*IL MASTER MOSTRERA' LA MATRICE FINALE (C)*/
 	if (my_rank == 0) {
 		printf("\nThe multiplication between the two matrix is:\n");
 		printMatrix(matrixC, SIZE);
 		printf("\n\n");
-		endTime = MPI_Wtime();													//Acquisizione tempo di fine della computazione
 		printf( "Elapsed time is %f\n", endTime - startTime);
 	}
 
 	/* shut down MPI */
+	if(p != 1){
+		MPI_Type_free(&matrixType);						//Viene liberata la memoria allocata per il datatype creato
+	}
+
+	/*DEALLOCAZIONE PUNTATORI*/
+	free(matrixA);
+	free(matrixB);
+	free(matrixC);
+	/*-------*/
+
 	MPI_Finalize();
 
 	return 0;
