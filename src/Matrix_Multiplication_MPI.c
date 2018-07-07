@@ -94,13 +94,14 @@ int main(int argc, char* argv[]){
 		printf("\n");
 	}
 
-	if(p != 1){																			//SE IL NUMERO DI PROCESSI NON E' 1
-		/*Calcolo porzione di matrice di assegnata ad ogni processore*/
-		fromProcess = my_rank * SIZE/p;
-		toProcess = (my_rank+1) * SIZE/p;
-		/*------*/
+	startTime = MPI_Wtime();														//Acquisizione del tempo di inizio della computazione
 
-		startTime = MPI_Wtime();														//Acquisizione del tempo di inizio della computazione
+	/*Calcolo porzione di matrice di assegnata ad ogni processore*/
+	fromProcess = my_rank * SIZE/p;
+	toProcess = (my_rank+1) * SIZE/p;
+	/*------*/
+
+	if(p != 1){																			//SE IL NUMERO DI PROCESSI NON E' 1
 		MPI_Bcast(&matrixB[0][0], SIZE*SIZE, MPI_INT, 0, MPI_COMM_WORLD);				//PROCESSORE MASTER INVIA MATRICE B TRAMITE UNA BROADCAST A TUTTI I PROCESSORI
 
 		/*SUDDIVISIONE: ad ogni processo viene assegnato un certo numero di righe, (anche il master partecipa alla computazione)*/
@@ -111,7 +112,7 @@ int main(int argc, char* argv[]){
 			printf("Portion assigned to each process: %d\n\n", SIZE/p);
 		}
 
-		/*PROCESSORE MASTER INVIA LE PORZIONI DELLA MATRICE (A) AD OGNI PROCESSO. OGNI PROCESSO AVRA' SIZE/p RIGHE DA COMPUTARE*/
+		/*PROCESSORE MASTER INVIA LE PORZIONI DELLA MATRICE (A) AD OGNI PROCESSO. OGNI PROCESSO AVRA' UN CERTO NUMERO DI RIGHE DA COMPUTARE*/
 		MPI_Scatter(*matrixA, 1, matrixType, matrixA[fromProcess], 1, matrixType, 0, MPI_COMM_WORLD);
 
 		/*STAMPA DELLA MATRICE TEMPORANEA DI OGNI PROCESSO*/
@@ -123,39 +124,27 @@ int main(int argc, char* argv[]){
 			printf("\n");
 		}*/
 		/*-----*/
+	}
 
-		starTimeProcess = MPI_Wtime();															/*Acquisizione tempo di inizio del calcolo del prodotto*/
-		/*CALCOLO MOLTIPLICAZIONE TRA MATRICE RICEVUTA E MATRICE B*/
-		for(i=fromProcess; i<toProcess; i++){
-			for(j=0; j<SIZE; j++){
-				for(k=0; k<SIZE; k++){
-					sum = sum + matrixA[i][k]*matrixB[k][j];
-				}
-				matrixC[i][j] = sum;
-				sum = 0;
+	starTimeProcess = MPI_Wtime();															/*Acquisizione tempo di inizio del calcolo del prodotto*/
+	/*CALCOLO MOLTIPLICAZIONE TRA MATRICE RICEVUTA E MATRICE B*/
+	for(i=fromProcess; i<toProcess; i++){
+		for(j=0; j<SIZE; j++){
+			for(k=0; k<SIZE; k++){
+				sum = sum + matrixA[i][k]*matrixB[k][j];
 			}
+			matrixC[i][j] = sum;
+			sum = 0;
 		}
-		/*-------*/
-		endTimeProcess = MPI_Wtime();															/*Acquisizione tempo di fine del calcolo del prodotto*/
-		printf("Elapsed time of computation for process %d is %f\n", my_rank, endTimeProcess - starTimeProcess);
-		printf("\n");
+	}
+	/*-------*/
+	endTimeProcess = MPI_Wtime();															/*Acquisizione tempo di fine del calcolo del prodotto*/
+	printf("Elapsed time of computation for process %d is %f\n", my_rank, endTimeProcess - starTimeProcess);
+	printf("\n");
 
+	if(p != 1){
 		/*Ogni processo dopo aver effettuato la moltiplicazione con la propria porzione di matrice, invia le righe che si è calcolato alla matrice risultante (C)*/
 		MPI_Gather(&matrixC[fromProcess][0], 1, matrixType, &matrixC[0][0], 1, matrixType, 0, MPI_COMM_WORLD);
-
-	} else {																		//SE C'È UN UNICO PROCESSORE
-		startTime = MPI_Wtime();													//Acquisizione del tempo di inizio della computazione
-		/*CALCOLO MOLTIPLICAZIONE TRA MATRICE A E MATRICE B*/
-		for(i=0; i<SIZE; i++){
-			for(j=0; j<SIZE; j++){
-				for(k=0; k<SIZE; k++){
-					sum = sum + matrixA[i][k]*matrixB[k][j];
-				}
-				matrixC[i][j] = sum;
-				sum = 0;
-			}
-		}
-		/*-------*/
 	}
 
 	endTime = MPI_Wtime();													//Acquisizione tempo di fine della computazione
