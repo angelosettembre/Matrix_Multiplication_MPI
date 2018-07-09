@@ -139,7 +139,7 @@ int main(int argc, char* argv[]){
 	}
 	/*-------*/
 	endTimeProcess = MPI_Wtime();															/*Acquisizione tempo di fine del calcolo del prodotto*/
-	printf("Elapsed time of computation for process %d is %f\n", my_rank, endTimeProcess - starTimeProcess);
+	printf("Elapsed time of computation for process %d is %f ms\n", my_rank, (endTimeProcess - starTimeProcess)*1000);
 	printf("\n");
 
 	if(p != 1){
@@ -154,7 +154,7 @@ int main(int argc, char* argv[]){
 		printf("\nThe multiplication between the two matrix is:\n");
 		printMatrix(matrixC, SIZE);
 		printf("\n\n");
-		printf( "Elapsed time is %f\n", endTime - startTime);
+		printf( "Elapsed time is %f ms\n", (endTime - startTime)*1000);
 	}
 
 	/* shut down MPI */
