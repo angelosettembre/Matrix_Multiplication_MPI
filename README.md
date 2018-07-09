@@ -244,7 +244,7 @@ mpicc Matrix_Multiplication_MPI.c -o MatrixMultiplicationMpi
 Per eseguire il programma, bisogna passare il numero di processori e la dimensione della matrice:
 
 ```
-mpirun -np NUMERO_DI_PROCESSORI MatrixMultiplicationMpi DIMENSIONE_MATRICE
+mpirun -np NUMERO_DI_PROCESSORI -host INDIRIZZI IP MACCHINE CLUSTER MatrixMultiplicationMpi DIMENSIONE_MATRICE
 ```
 
 ### Benchmarking
