@@ -256,7 +256,7 @@ Risorse massime utilizzate:
 Nei test di strong scaling, è stata utilizzata una matrice in input di dimensioni 1680x1680 questo perché si deve garantire che la dimensione della matrice deve essere divisibile per il numero di processori (2,4,6,8,10,12,14,16).
 
 **N.processori**|**Tempo (ms)**|
-:-----:|:-----:|:-----:|:-----:
+:-----:|:-----:|
 1|26613,09|
 2|13778,02|
 4|7237,80|
