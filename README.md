@@ -252,20 +252,7 @@ Risorse massime utilizzate:
 * 8 Istanze EC2 m4.large **StarCluster-Ubuntu_12.04-x86_64-hvm** - ami-52a0c53b
 * 16 processori
 
-### Strong Scaling
-Nei test di strong scaling, è stata utilizzata una matrice in input di dimensioni 1680x1680 questo perché si deve garantire che la dimensione della matrice deve essere divisibile per il numero di processori (2,4,6,8,10,12,14,16).
-
-**N.processori**|**Tempo (ms)**
-:-----:|:-----:
-1|26613,09|
-2|13778,02|
-4|7237,80|
-6|4801,97|
-8|3819,69|
-10|11034,81|
-12|9193,20|
-14|8003,22|
-16|7014,88|
+### Strong ScalingNei test di strong scaling, in input è stata utilizzata una matrice di dimensioni 1680x1680, al fine di garantire che la dimensione della matrice sia divisibile per il numero di processori (2,4,6,8,10,12,14,16). Di seguito vengono riportati, in sottoforma tabellare, i tempi di esecuzione dei test:**N.processori**|**Tempo (ms)**:-----:|:-----:1|26613,09|2|13778,02|4|7237,80|6|4801,97|8|3819,69|10|11034,81|12|9193,20|14|8003,22|16|7014,88|
 
 Di seguito il grafico corrispondente:
 
@@ -273,6 +260,14 @@ Di seguito il grafico corrispondente:
 
 Dal grafico si può notare che vi è un aumento di tempo dall'utilizzo di 10 processori in poi dovuto probabilmente dall'alto overhead di comunicazione.
 
+### Weak Scaling
+Per la weak scaling, la dimensione della matrice deve crescere proporzionalmente al numero di processori. Si è scelto quindi di definire la dimensione della matrice in funzione di p, cioè: **n=130*****p** dove **p** è il numero di processori utilizzati. Di seguito vengono riportati, sottoforma tabellare, i tempi di esecuzione dei test:
+
+**N.processori**|**Tempo (ms)**:-----:|:-----:1|7,89|2|39,59|4|170,76|6|498,79|8|782,81|10|3964,83|12|7239,65|14|11962,77|16|15002,68|
+
+Di seguito il grafico corrispondente:
+
+![](img/Weak_Scaling.png)
 
 ### Compilazione
 Il sorgente va compilato con l'istruzione seguente:
