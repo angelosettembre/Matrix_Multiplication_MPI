@@ -263,7 +263,7 @@ Dal grafico si può notare che vi è un aumento di tempo dall'utilizzo di 10 pro
 ### Weak Scaling
 Per la weak scaling, la dimensione della matrice deve crescere proporzionalmente al numero di processori. Si è scelto quindi di definire la dimensione della matrice in funzione di p, cioè: **n=130*****p** dove **p** è il numero di processori utilizzati. Di seguito vengono riportati, sottoforma tabellare, i tempi di esecuzione dei test:
 
-**N.processori**|**Tempo (ms)**:-----:|:-----:1|7,89|2|39,59|4|170,76|6|498,79|8|782,81|10|3964,83|12|7239,65|14|11962,77|16|15002,68|
+**Dimensione matrice**|**N.processori**|**Tempo (ms)**:-----:|:-----:|:-----:130|1|7,89|260|2|39,59|520|4|170,76|780|6|498,79|1040|8|782,81|1300|10|3964,83|1560|12|7239,65|1820|14|11962,77|2080|16|15002,68|
 
 Di seguito il grafico corrispondente:
 
