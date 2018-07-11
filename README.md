@@ -28,7 +28,7 @@ L'obiettivo era quello di parallelizzare la moltiplicazione tra matrici utilizza
 
 ![](img/division.jpg)
 
-Ogni processore, quindi, avrà (**numero di righe / numero di processori**) righe. Poiché la dimensione della matrici è divisibile per il numero di processori (**SIZE / p**), ogni processore avrà un numero di righe equo. La matrice B, invece, verrà ricevuta da tutti i processori, in questo modo ogni processore può effettuare il prodotto tra la porzione della matrice A e le colonne della matrice B.
+Ogni processore, quindi, avrà (**numero di righe / numero di processori**) righe. Poiché la dimensione della matrice è divisibile per il numero di processori (**SIZE / p**), ogni processore avrà un numero di righe equo. La matrice B, invece, verrà ricevuta da tutti i processori, in questo modo ogni processore può effettuare il prodotto tra la porzione della matrice A e le colonne della matrice B.
 
 ## Implementazione
 ### Inizializzazione MPI e controllo divisibilità
@@ -258,18 +258,44 @@ Di seguito il grafico corrispondente:
 
 ![](img/Strong_Scaling.png)
 
-Dal grafico si può notare che vi è un aumento di tempo dall'utilizzo di 10 processori in poi dovuto probabilmente dall'alto overhead di comunicazione.
+Dal grafico si può notare che vi è un aumento di tempo dall'utilizzo di 10 processori in poi dovuto probabilmente dall'overhead di comunicazione.
 
 ### Weak Scaling
-Per la weak scaling, la dimensione della matrice deve crescere proporzionalmente al numero di processori. Si è scelto quindi di definire la dimensione della matrice in funzione di p, cioè: **n=130*****p** dove **p** è il numero di processori utilizzati. Di seguito vengono riportati, sottoforma tabellare, i tempi di esecuzione dei test:
+Per la weak scaling, la dimensione della matrice deve crescere proporzionalmente al numero di processori. Si è scelto quindi di definire la dimensione della matrice in funzione di p, cioè: **n=190*****p** dove **p** è il numero di processori utilizzati. Di seguito vengono riportati, sottoforma tabellare, i tempi di esecuzione dei test:
 
-**Dimensione matrice**|**N.processori**|**Tempo (ms)**:-----:|:-----:|:-----:130|1|7,89|260|2|39,59|520|4|170,76|780|6|498,79|1040|8|782,81|1300|10|3964,83|1560|12|7239,65|1820|14|11962,77|2080|16|15002,68|
+**Dimensione matrice**|**N.processori**|**Tempo (ms)**:-----:|:-----:|:-----:190|1|24,36|380|2|120,37|760|4|526,82|1140|6|1221,45|1520|8|2977,01|1900|10|15211,48|2280|12|28213,73|2660|14|43964,91|3040|16|57257,43|
 
 Di seguito il grafico corrispondente:
 
 ![](img/Weak_Scaling.png)
+Dal grafico si può notare che il tempo aumenta con l'aumentare della taglia della matrice, ma in particolare vi è un significativo aumento di tempo, come nei test di strong scaling, dall'utilizzo di 10 processori in poi dovuto probabilmente dall'overhead di comunicazione.
 
-### Compilazione
+##Fattori di scalabilità
+Per i test di Strong Scaling i fattori di scalabilità sono stati calcolati tramite la formula:
+
+```
+t1 / ( N * tN ) * 100%
+```
+Per i test di Weak Scaling i fattori di scalabilità sono stati calcolati tramite la formula:
+
+```
+( t1 / tN ) * 100%
+```
+Dove:
+
+* t1: tempo di esecuzione con 1 processore
+* N: numero di processori utilizzati per il caso corrente
+* tN: tempo di esecuzione utilizzando N processori
+
+I fattori di scalabilità sono riportati nella tabella seguente (approssimati di quattro cifre dopo la virgola):
+
+||2|4|6|8|10|12|14|16|
+|--------|--------|--------|--------|--------|--------|--------|--------|--------|
+|**Strong Scaling**|0,9658|0,9192|0,9237|0,8709|0,2412|0,2412|0,2375|0,2371|
+|**Weak Scaling**|0,2023|0,0462|0,0199|0,0082|0,0016|0,0009|0,0006|0,0004|
+
+
+## Compilazione
 Il sorgente va compilato con l'istruzione seguente:
 
 ```
