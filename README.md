@@ -252,7 +252,20 @@ Risorse massime utilizzate:
 * 8 Istanze EC2 m4.large **StarCluster-Ubuntu_12.04-x86_64-hvm** - ami-52a0c53b
 * 16 processori
 
-### Strong ScalingNei test di strong scaling, in input è stata utilizzata una matrice di dimensioni 1680x1680, al fine di garantire che la dimensione della matrice sia divisibile per il numero di processori (2,4,6,8,10,12,14,16). Di seguito vengono riportati, in sottoforma tabellare, i tempi di esecuzione dei test:**N.processori**|**Tempo (ms)**:-----:|:-----:1|26613,09|2|13778,02|4|7237,80|6|4801,97|8|3819,69|10|11034,81|12|9193,20|14|8003,22|16|7014,88|
+### Strong Scaling
+Nei test di strong scaling, in input è stata utilizzata una matrice di dimensioni 1680x1680, al fine di garantire che la dimensione della matrice sia divisibile per il numero di processori (2,4,6,8,10,12,14,16). Di seguito vengono riportati, in sottoforma tabellare, i tempi di esecuzione dei test:
+
+**N.processori**|**Tempo (ms)**
+:-----:|:-----:
+1|26613,09|
+2|13778,02|
+4|7237,80|
+6|4801,97|
+8|3819,69|
+10|11034,81|
+12|9193,20|
+14|8003,22|
+16|7014,88|
 
 Di seguito il grafico corrispondente:
 
@@ -263,12 +276,23 @@ Dal grafico si può notare che vi è un aumento di tempo dall'utilizzo di 10 pro
 ### Weak Scaling
 Per la weak scaling, la dimensione della matrice deve crescere proporzionalmente al numero di processori. Si è scelto quindi di definire la dimensione della matrice in funzione di p, cioè: **n=190*****p** dove **p** è il numero di processori utilizzati. Di seguito vengono riportati, sottoforma tabellare, i tempi di esecuzione dei test:
 
-**Dimensione matrice**|**N.processori**|**Tempo (ms)**:-----:|:-----:|:-----:190|1|24,36|380|2|120,37|760|4|526,82|1140|6|1221,45|1520|8|2977,01|1900|10|15211,48|2280|12|28213,73|2660|14|43964,91|3040|16|57257,43|
+**Dimensione matrice**|**N.processori**|**Tempo (ms)**
+:-----:|:-----:|:-----:
+190|1|24,36|
+380|2|120,37|
+760|4|526,82|
+1140|6|1221,45|
+1520|8|2977,01|
+1900|10|15211,48|
+2280|12|28213,73|
+2660|14|43964,91|
+3040|16|57257,43|
 
 Di seguito il grafico corrispondente:
 
 ![](img/Weak_Scaling.png)
 Dal grafico si può notare che il tempo aumenta con l'aumentare della taglia della matrice, ma in particolare vi è un significativo aumento di tempo, come nei test di strong scaling, dall'utilizzo di 10 processori in poi dovuto probabilmente dall'overhead di comunicazione.
+
 
 ##Fattori di scalabilità
 Per i test di Strong Scaling i fattori di scalabilità sono stati calcolati tramite la formula:
