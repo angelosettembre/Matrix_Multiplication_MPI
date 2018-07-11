@@ -8,7 +8,7 @@
 
 **Dott. Carmine Spagnuolo**
 
-**Studente: Angelo Settembre**
+**Studente: Angelo Settembre	0522500555**
 
 ------
 
@@ -16,7 +16,7 @@
 
 ------
 
-In questo progetto si vuole risolvere il problema del calcolo della moltiplicazione tra matrici. Date due matrici A e B di dimensione *(n x n)*, viene effettuato il prodotto righe per colonne tra le due matrici. Il risultato verrà riportato nella matrice risultato C.
+In questo progetto si vuole risolvere il problema del calcolo della moltiplicazione tra matrici. Date due matrici quadrate A e B di dimensione *(n x n)*, viene effettuato il prodotto righe per colonne tra le due matrici. Il risultato verrà riportato all'interno della matrice risultato C.
 
 ![1024px-Matrix_multiplication_diagram.svg](img/1024px-Matrix_multiplication_diagram.svg.png)
 
@@ -24,11 +24,11 @@ In questo progetto si vuole risolvere il problema del calcolo della moltiplicazi
 
 ### Soluzione proposta
 
-L'obiettivo era quello di parallelizzare la moltiplicazione tra matrici utilizzando MPI. La soluzione proposta considera solo matrici quadrate **N x N** dove la dimensione di ogni matrice deve essere divisibile per il numero di processori **p**. Nel caso in cui la dimensione in input non è divisible per il numero di processori **p**, il programma si arresta. Il programma prende in input la taglia delle matrici, costruendo le matrici A e B in maniera randomica (range di valori tra 0 e 9). In outuput fornirà la matrice risultato C. La comunicazione per i processori è stata realizzata mediante l'utilizzo di operazioni collettive come **MPI_Bcast**, **MPI_Scatter**, **MPI_Gather**. Vista la natura del problema, la soluzione che è stata attuata prevede il partizionamento della matrice A in righe, tutte composte dallo stesso numero di colonne, distribuite tra i vari processori. 
+L'obiettivo era quello di parallelizzare la moltiplicazione tra matrici utilizzando MPI. La soluzione proposta considera solo matrici quadrate **N x N** dove la dimensione di ogni matrice deve essere divisibile per il numero di processori **p**. Nel caso in cui la dimensione in input delle matrici non è divisible per il numero di processori **p**, il programma si arresta. Il programma prende in input la taglia delle matrici, costruendo le matrici A e B in maniera randomica (range di valori tra 0 e 9). In outuput fornirà la matrice risultato C. La comunicazione per i processori è stata realizzata mediante l'utilizzo di operazioni collettive come **MPI_Bcast**, **MPI_Scatter**, **MPI_Gather**. Vista la natura del problema, la soluzione che è stata attuata prevede il partizionamento della matrice A in righe, tutte composte dallo stesso numero di colonne, distribuite tra i vari processori. 
 
 ![](img/division.jpg)
 
-Ogni processore, quindi, avrà (**numero di righe / numero di processori**) righe. Poiché la dimensione della matrice è divisibile per il numero di processori (**SIZE / p**), ogni processore avrà un numero di righe equo. La matrice B, invece, verrà ricevuta da tutti i processori, in questo modo ogni processore può effettuare il prodotto tra la porzione della matrice A e le colonne della matrice B.
+Ogni processore, quindi, avrà (**numero di righe / numero di processori**) righe. Poiché la dimensione della matrice A è divisibile per il numero di processori (**SIZE / p**), ogni processore avrà un numero di righe equo. La matrice B, invece, verrà ricevuta da tutti i processori, in questo modo ogni processore può effettuare il prodotto tra la porzione della matrice A e le colonne della matrice B.
 
 ## Implementazione
 ### Inizializzazione MPI e controllo divisibilità
@@ -44,12 +44,12 @@ MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 /* find out number of processes */
 MPI_Comm_size(MPI_COMM_WORLD, &p);
 ```
-Successivamente, come già accennato nel paragrafo precedente, il programma prende in input da linea di comando, la dimesione della matrici quadrate.
+Successivamente, come accennato nel precedente paragrafo, il programma prende in input da linea di comando, la dimensione delle matrici.
 
 ```c
 int SIZE = atoi(argv[1]);					
 ```
-Una volta acquisita la dimensione si controlla se tale dimensione è divisibile per il numero di processori. Se non è divisibile, il processore MASTER fa terminare la computazione.
+Una volta acquisita la dimensione, si controlla se tale dimensione è divisibile per il numero di processori. Se non è divisibile, il processore MASTER fa terminare la computazione.
 
 ```c
 if(p % SIZE != 0){
@@ -89,7 +89,7 @@ void allocateMatrix(int **matrix, int size){
 		matrix[i]= &contiguousItems[i*size];			//SI RENDE LA MATRICE COME UN ARRAY
 }
 ```
-Dopo la allocazione, il processore MASTER ha il compito di inizializzare le matrici A e B con valori randomici (tra 0 e 9):
+Dopo la fase di allocazione, il processore MASTER ha il compito di inizializzare le matrici A e B con valori randomici (tra 0 e 9):
 
 ```c
 if (my_rank == 0){							
@@ -119,7 +119,7 @@ void createMatrix(int **matrix, int size){
 }
 ```
 ### Calcolo indici matrice
-Una volta allocate e costruite le matrici A e B, vengono calcolati gli indici di inizio e di fine di ogni porzione di matrice assegnata ad un processore.
+Una volta allocate e costruite le matrici A e B, vengono calcolati gli indici di inizio e di fine che indicano la porzione di matrice assegnata ad ogni processore.
 
 ```c
 fromProcess = my_rank * SIZE/p;
@@ -149,10 +149,10 @@ Una volta costruito il data type, viene allocato utilizzando la routine **MPI_Ty
 
 ![](img/data-contiguous.jpg)
 
-La scelta è ricaduta sulla dimensione **SIZE * SIZE / p** poiché ciascun processore deve avere la propria porzione di sottomatrice, in maniera tale che ognuno di essi può effettuare la moltiplicazione equamente.
+La scelta è ricaduta sulla dimensione **SIZE * SIZE / p** poiché ciascun processore deve avere la propria porzione di sottomatrice, in maniera tale che ognuno di essi effettui la moltiplicazione equamente.
 
 ### Invio righe matrice A
-Dopo che la matrice B risulta essere inviata, il processore MASTER distribuisce equamente le porzioni di matrice A a tutti i processori che fanno parte della computazione. Viene utilizzata la routine **MPI_Scatter** dove la matrice A viene inviata per righe (come un array) e tali righe vengono inviate nella porzione di matrice A che ogni processore possiede. Viene utilizzato il data type *matrixType*.
+Dopo che la matrice B risulta essere inviata, il processore MASTER distribuisce equamente le porzioni di matrice A a tutti i processori che fanno parte della computazione. Viene utilizzata la routine **MPI_Scatter** dove la matrice A viene inviata per righe (come un array) a tutti i processori, in maniera tale che ognuno di essi possiede un determinata porzione di matrice A. Viene utilizzato il data type *matrixType*.
 
 ![](img/blasmatrix.png)
 
@@ -161,8 +161,8 @@ MPI_Scatter(*matrixA, 1, matrixType, matrixA[fromProcess], 1, matrixType, 0, MPI
 ```
 
 ### Calcolo moltiplicazione tra matrici
-Per il calcolo della moltiplicazione tra matrici, è stato utilizzato un algoritmo abbastanza semplice in quanto viene effettuato prima il prodotto tra le righe della matrice A e le colonne della matrice B e poi il risultato, verrà sommato con il risultato precedente e così via. Questo tipo di algoritmo richede *n^3* moltiplicazioni e *n^3* addizioni, che portano ad una complessità temporale di O(n^3).
-Nel codice si può notare che all'interno del primo **for**, l'indice delle matrici viene gestito in maniera tale che l'indice di inizio (**fromProcess**) e l'indice di fine (**toProcess**), andranno a stabilire la porzione di matrice su cui ogni processore dovrà operare. Esempio (N=30, e p=3):
+Per il calcolo della moltiplicazione tra matrici, è stato utilizzato un algoritmo abbastanza semplice in quanto viene effettuato prima il prodotto tra le righe della matrice A e le colonne della matrice B, poi il risultato, verrà sommato con il risultato precedente e così via. Questo tipo di algoritmo richede *n^3* moltiplicazioni e *n^3* addizioni, che portano ad una complessità temporale di O(n^3).
+Nel codice si può notare che all'interno del primo **for**, l'indice delle matrici viene gestito in maniera tale che l'indice di inizio (**fromProcess**) e l'indice di fine (**toProcess**), andranno a stabilire la porzione di matrice A su cui ogni processore dovrà operare. Esempio (N=30, e p=3):
 
 * il processore 0 avrà la porzione di matrice tra 0 e 10
 * il processore 1 avrà la porzione di matrice tra 10 e 20
@@ -181,7 +181,7 @@ for(i=fromProcess; i<toProcess; i++){
 }
 ```
 ### Invio risultato moltiplicazione matrici al processore MASTER
-Una volta che un processore ha effettuato la moltiplicazione con la propria porzione di matrice, il risultato sarà memorizzato all'interno matrice C locale al processore. Quindi ogni processore dovrà inviare la propria porzione di matrice C al processore MASTER il quale le righe che riceverà saranno ridistribuite in base al rank, all'interno della matrice finale C. Viene utilizzata la routine di comunicazione collettiva **MPI_Gather**.
+Una volta che un processore ha effettuato la moltiplicazione tra la propria porzione di matrice A e la matrice B, il risultato sarà memorizzato all'interno matrice C locale al processore. Quindi ogni processore dovrà inviare la propria porzione di matrice C calcolata, al processore MASTER. Le righe che il processore MASTER riceverà, saranno ridistribuite in base al rank di ogni processore, all'interno della matrice finale C. Per far ciò, viene utilizzata la routine di comunicazione collettiva **MPI_Gather**.
 
 ```c
 MPI_Gather(&matrixC[fromProcess][0], 1, matrixType, &matrixC[0][0], 1, matrixType, 0, MPI_COMM_WORLD);
@@ -234,7 +234,7 @@ MPI_Finalize();
 
 ## Testing
 ### Benchmarking
-I benchmark sono stati condotti utilizzando delle instanze di tipo **m4.large** (2 core) di Amazon Web Services. I test sono stati effettuati 3 volte dopodiché è stata presa in considerazione la media dei valori risultanti. Il tempo di esecuzione è stato considerato a partire dal momento successivo alla allocazione e della inizializzazione delle matrici da parte del processore MASTER. I tempi sono stati misurati in millisecondi ed è stata utilizzata la routine **MPI_Wtime**.
+I benchmark sono stati condotti utilizzando delle instanze di tipo **m4.large** (2 core) di Amazon Web Services. I test sono stati effettuati 3 volte dopodiché è stata presa in considerazione la media dei valori risultanti. Il tempo di esecuzione è stato considerato a partire dal momento successivo alla allocazione e alla inizializzazione delle matrici da parte del processore MASTER. I tempi sono stati misurati in millisecondi ed è stata utilizzata la routine **MPI_Wtime**.
 
 ```c
 startTime = MPI_Wtime();
@@ -253,7 +253,7 @@ Risorse massime utilizzate:
 * 16 processori
 
 ### Strong Scaling
-Nei test di strong scaling, in input è stata utilizzata una matrice di dimensioni 1680x1680, al fine di garantire che la dimensione della matrice sia divisibile per il numero di processori (2,4,6,8,10,12,14,16). Di seguito vengono riportati, in sottoforma tabellare, i tempi di esecuzione dei test:
+Nei test di strong scaling, in input è stata utilizzata una matrice di dimensioni 1680x1680, al fine di garantire che la dimensione della matrice sia divisibile per il numero di processori (2,4,6,8,10,12,14,16). Di seguito vengono riportati, sottoforma tabellare, i tempi di esecuzione dei test:
 
 **N.processori**|**Tempo (ms)**
 :-----:|:-----:
