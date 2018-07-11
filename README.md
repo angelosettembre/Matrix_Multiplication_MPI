@@ -294,7 +294,9 @@ Di seguito il grafico corrispondente:
 Dal grafico si può notare che il tempo aumenta con l'aumentare della taglia della matrice, ma in particolare vi è un significativo aumento di tempo, come nei test di strong scaling, dall'utilizzo di 10 processori in poi dovuto probabilmente dall'overhead di comunicazione.
 
 
-##Fattori di scalabilità
+------
+
+## Fattori di scalabilità
 Per i test di Strong Scaling i fattori di scalabilità sono stati calcolati tramite la formula:
 
 ```
