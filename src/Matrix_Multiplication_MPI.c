@@ -29,7 +29,6 @@ int main(int argc, char* argv[]){
 	int sum = 0;
 	double startTime, endTime;								/*Tempo inizio-fine computazione totale*/
 	double starTimeProcess, endTimeProcess;					/*Tempo inizio-fine computazione di ogni processo*/
-	MPI_Datatype matrixType;								/*Tipo derivato per le matrici*/
 
 	/* start up MPI */
 
@@ -105,15 +104,13 @@ int main(int argc, char* argv[]){
 		MPI_Bcast(&matrixB[0][0], SIZE*SIZE, MPI_INT, 0, MPI_COMM_WORLD);				//PROCESSORE MASTER INVIA MATRICE B TRAMITE UNA BROADCAST A TUTTI I PROCESSORI
 
 		/*SUDDIVISIONE: ad ogni processo viene assegnato un certo numero di righe, (anche il master partecipa alla computazione)*/
-		MPI_Type_contiguous(SIZE*SIZE/p, MPI_INT, &matrixType);							/*Replicazione del tipo di dato (matrixType) in posizioni contigue della matrice*/
-		MPI_Type_commit(&matrixType);
 
 		if(my_rank == 0){
 			printf("Portion assigned to each process: %d\n\n", SIZE/p);
 		}
 
 		/*PROCESSORE MASTER INVIA LE PORZIONI DELLA MATRICE (A) AD OGNI PROCESSO. OGNI PROCESSO AVRA' UN CERTO NUMERO DI RIGHE DA COMPUTARE*/
-		MPI_Scatter(*matrixA, 1, matrixType, matrixA[fromProcess], 1, matrixType, 0, MPI_COMM_WORLD);
+		MPI_Scatter(*matrixA, SIZE*SIZE/p, MPI_INT, matrixA[fromProcess], SIZE*SIZE/p, MPI_INT, 0, MPI_COMM_WORLD);
 
 		/*STAMPA DELLA MATRICE TEMPORANEA DI OGNI PROCESSO*/
 		/*printf("MATRIX Temp rank:%d \n", my_rank);
@@ -144,7 +141,7 @@ int main(int argc, char* argv[]){
 
 	if(p != 1){
 		/*Ogni processo dopo aver effettuato la moltiplicazione con la propria porzione di matrice, invia le righe che si è calcolato alla matrice risultante (C)*/
-		MPI_Gather(&matrixC[fromProcess][0], 1, matrixType, &matrixC[0][0], 1, matrixType, 0, MPI_COMM_WORLD);
+		MPI_Gather(&matrixC[fromProcess][0], SIZE*SIZE/p, MPI_INT, &matrixC[0][0], SIZE*SIZE/p, MPI_INT, 0, MPI_COMM_WORLD);
 	}
 
 	endTime = MPI_Wtime();													//Acquisizione tempo di fine della computazione
@@ -158,9 +155,6 @@ int main(int argc, char* argv[]){
 	}
 
 	/* shut down MPI */
-	if(p != 1){
-		MPI_Type_free(&matrixType);						//Viene liberata la memoria allocata per il datatype creato
-	}
 
 	/*DEALLOCAZIONE PUNTATORI*/
 	free(matrixA);

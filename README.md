@@ -134,30 +134,18 @@ Nel caso in cui vi siano più processori **(p != 1)**, il processore MASTER invi
 MPI_Bcast(&matrixB[0][0], SIZE*SIZE, MPI_INT, 0, MPI_COMM_WORLD);
 ```
 
-### Costruzione e allocazione data type
-Si definisce un tipo derivato per le matrici. Si utilizza la routine **MPI_Data_Type**.
-
-```c
-MPI_Datatype matrixType;
-...
-...
-MPI_Type_contiguous(SIZE*SIZE/p, MPI_INT, &matrixType);
-MPI_Type_commit(&matrixType);
-```
-
-Una volta costruito il data type, viene allocato utilizzando la routine **MPI_Type_contiguous** dove viene replicato il data type *matrixType* in **SIZE * SIZE / p** posizioni contigue.
+### Dimensione della sottomatrice da inviare
+La scelta è ricaduta sulla dimensione **SIZE * SIZE / p** poiché ciascun processore deve avere la propria porzione di sottomatrice, in maniera tale che ognuno di essi effettui la moltiplicazione equamente. Tale dimensione verrà utilizzata all'interno delle operazioni collettive **MPI_Scatter** e **MPI_Gather** inviando la matrice come un array.
 
 ![](img/data-contiguous.jpg)
 
-La scelta è ricaduta sulla dimensione **SIZE * SIZE / p** poiché ciascun processore deve avere la propria porzione di sottomatrice, in maniera tale che ognuno di essi effettui la moltiplicazione equamente.
-
 ### Invio righe matrice A
-Dopo che la matrice B risulta essere inviata, il processore MASTER distribuisce equamente le porzioni di matrice A a tutti i processori che fanno parte della computazione. Viene utilizzata la routine **MPI_Scatter** dove la matrice A viene inviata per righe (come un array) a tutti i processori, in maniera tale che ognuno di essi possiede un determinata porzione di matrice A. Viene utilizzato il data type *matrixType*.
+Dopo che la matrice B risulta essere inviata, il processore MASTER distribuisce equamente le porzioni di matrice A a tutti i processori che fanno parte della computazione. Viene utilizzata la routine **MPI_Scatter** dove la matrice A viene inviata per righe (come un array) a tutti i processori, in maniera tale che ognuno di essi possiede un determinata porzione di matrice A.
 
 ![](img/blasmatrix.png)
 
 ```c
-MPI_Scatter(*matrixA, 1, matrixType, matrixA[fromProcess], 1, matrixType, 0, MPI_COMM_WORLD);
+MPI_Scatter(*matrixA, SIZE*SIZE/p, MPI_INT, matrixA[fromProcess], SIZE*SIZE/p, MPI_INT, 0, MPI_COMM_WORLD);
 ```
 
 ### Calcolo moltiplicazione tra matrici
@@ -184,7 +172,7 @@ for(i=fromProcess; i<toProcess; i++){
 Una volta che un processore ha effettuato la moltiplicazione tra la propria porzione di matrice A e la matrice B, il risultato sarà memorizzato all'interno matrice C locale al processore. Quindi ogni processore dovrà inviare la propria porzione di matrice C calcolata, al processore MASTER. Le righe che il processore MASTER riceverà, saranno ridistribuite in base al rank di ogni processore, all'interno della matrice finale C. Per far ciò, viene utilizzata la routine di comunicazione collettiva **MPI_Gather**.
 
 ```c
-MPI_Gather(&matrixC[fromProcess][0], 1, matrixType, &matrixC[0][0], 1, matrixType, 0, MPI_COMM_WORLD);
+MPI_Gather(&matrixC[fromProcess][0], SIZE*SIZE/p, MPI_INT, &matrixC[0][0], SIZE*SIZE/p, MPI_INT, 0, MPI_COMM_WORLD);
 ```
 
 ![](img/proc2.png)
@@ -214,13 +202,10 @@ void printMatrix(int **matrix, int size){
 }
 ```
 ### Deallocazione puntatori e fine computazione
-Dopo che il processore MASTER ha stampato la matrice risultato C, ogni processore dealloca il datatype e i tre puntatori.
+Dopo che il processore MASTER ha stampato la matrice risultato C, ogni processore dealloca i tre puntatori.
 
 ```c
 /* shut down MPI */
-if(p != 1){
-	MPI_Type_free(&matrixType);
-}
 
 /*DEALLOCAZIONE PUNTATORI*/
 free(matrixA);
