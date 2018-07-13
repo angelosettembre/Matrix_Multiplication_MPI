@@ -28,7 +28,7 @@ L'obiettivo era quello di parallelizzare la moltiplicazione tra matrici utilizza
 
 ![](img/division.jpg)
 
-Ogni processore (compreso il MASTER), avrà (**numero di righe / numero di processori**) righe. Poiché la dimensione della matrice A è divisibile per il numero di processori (**SIZE / p**), ogni processore avrà un numero di righe equo. La matrice B, invece, verrà ricevuta da tutti i processori, in questo modo ogni processore può effettuare il prodotto tra la porzione della matrice A e le colonne della matrice B. Una volta finita la computazione, il risultato verrà inviato al processore MASTER il quale stamperà la matrice risultato C.
+Ogni processore (compreso il MASTER), avrà (**numero di righe / numero di processori**) righe. Poiché la dimensione della matrice A è divisibile per il numero di processori (**SIZE / p**), ogni processore avrà un numero di righe equo. La matrice B, invece, verrà ricevuta da tutti i processori, in questo modo ogni processore può effettuare il prodotto tra la porzione della matrice A e le colonne della matrice B. Finita la computazione, il risultato verrà inviato al processore MASTER il quale stamperà la matrice risultato C.
 
 ## Implementazione
 ### Inizializzazione MPI e controllo divisibilità
