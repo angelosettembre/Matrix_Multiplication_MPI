@@ -126,7 +126,7 @@ fromProcess = my_rank * SIZE/p;
 toProcess = (my_rank+1) * SIZE/p;
 ```
 ### Invio matrice B in broadcast
-Nel caso in cui vi siano più processori **(p != 1)**, il processore MASTER invia in broadcast la matrice B a tutti i processori. In questo modo ogni processore (compreso il MASTER) ha la matrice B con cui dopo può effettuare la moltiplicazione. Viene utilizzata la routine di comunicazione collettiva **MPI_Bcast** inviando l'intera matrice B.
+Il processore MASTER invia in broadcast la matrice B a tutti i processori. In questo modo ogni processore (MASTER compreso) ha la matrice B con cui dopo può effettuare la moltiplicazione. Viene utilizzata la routine di comunicazione collettiva **MPI_Bcast** inviando l'intera matrice B.
 
 ![](img/proc.png)
 
